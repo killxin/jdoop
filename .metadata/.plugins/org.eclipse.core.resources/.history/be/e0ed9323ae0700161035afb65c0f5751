@@ -1,0 +1,45 @@
+package mainclass;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+
+public class InvertIndex {
+
+	public static class InvertIndexMapper extends Mapper<Object, Text, Text, IntWritable> {
+		
+		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+			FileSplit filesplit = (FileSplit) context.getInputSplit();
+			String filename = filesplit.getPath().getName();
+			String temp = new String();
+			String line = value.toString();
+			StringTokenizer itr = new StringTokenizer(line, " ");
+			while(itr.hasMoreTokens()){
+				temp = itr.nextToken();		
+				//we can add stopwords here
+				Text word = new Text(temp+"#"+filename);
+				context.write(word, new IntWritable(1));
+			}
+		}
+
+	}
+	
+	public static class SumCombiner extends Reducer<Text,IntWritable,Text,IntWritable>{
+		private IntWritable result = new IntWritable();
+		
+		public void reduce(Text key,Iterable<IntWritable> values,Context context){
+			int sum = 0;
+			for(IntWritable val : values){
+				
+			}
+		}
+		
+	}
+}
