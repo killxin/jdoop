@@ -351,3 +351,13 @@ org.eclipse.core.runtime.CoreException: Cannot determine URI for '/InvertedIndex
 	at org.eclipse.equinox.launcher.Main.main(Main.java:1488)
 !SUBENTRY 2 org.eclipse.core.filebuffers 4 0 2016-04-23 16:16:52.603
 !MESSAGE Cannot determine URI for '/InvertedIndex/src/mainclass/InvertedIndexer.java'.
+!SESSION 2016-04-23 16:18:28.956 -----------------------------------------------
+eclipse.buildId=4.5.2.M20160212-1500
+java.version=1.7.0_80
+java.vendor=Oracle Corporation
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Framework arguments:  -product org.eclipse.epp.package.java.product
+Command-line arguments:  -os linux -ws gtk -arch x86_64 -product org.eclipse.epp.package.java.product
+
+!ENTRY org.eclipse.ui 4 4 2016-04-26 17:47:37.933
+!MESSAGE Plug-in 'org.eclipse.m2e.core.ui' contributed an invalid Menu Extension (Path: 'org.eclipse.ui.projectConfigure' is invalid): org.eclipse.m2e.enableNatureAction
