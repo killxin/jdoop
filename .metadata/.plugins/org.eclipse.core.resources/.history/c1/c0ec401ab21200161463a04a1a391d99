@@ -1,0 +1,26 @@
+package examples;
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
+
+public class newHBase {
+	
+	private static Configuration conf = null;
+	static {
+		conf = HBaseConfiguration.create();
+		conf.addResource("/home/jdoop/hbase-1.1.4/conf/hbase-site.xml");
+	    conf.addResource("/home/jdoop/hadoop-2.7.1/etc/hadoop/core-site.xml");   
+	}
+	public static void createTable(String tableName,String[] familys) throws IOException{
+		HTableDescriptor table = new HTableDescriptor(TableName.valueOf(tableName));
+	    	}
+}

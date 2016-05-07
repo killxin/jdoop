@@ -27,7 +27,11 @@
 <fullyQualifiedTypeName name="org.apache.hadoop.io.DoubleWritable"/>
 <fullyQualifiedTypeName name="org.apache.hadoop.io.DoubleWritable.Comparator"/>
 <fullyQualifiedTypeName name="org.apache.hadoop.io.WritableComparable"/>
+<fullyQualifiedTypeName name="java.util.Map.Entry"/>
+<fullyQualifiedTypeName name="org.apache.hadoop.hbase.TableName"/>
 <fullyQualifiedTypeName name="java.util.HashMap"/>
 <fullyQualifiedTypeName name="java.util.Map"/>
-<fullyQualifiedTypeName name="java.util.Map.Entry"/>
+<fullyQualifiedTypeName name="org.apache.hadoop.hbase.mapreduce.TableReducer"/>
+<fullyQualifiedTypeName name="org.apache.hadoop.hbase.client.Table"/>
+<fullyQualifiedTypeName name="org.apache.hadoop.hbase.io.ImmutableBytesWritable"/>
 </qualifiedTypeNameHistroy>

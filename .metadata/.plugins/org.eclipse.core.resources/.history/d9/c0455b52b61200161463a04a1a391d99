@@ -1,0 +1,47 @@
+package examples;
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.MasterNotRunningException;
+import org.apache.hadoop.hbase.ZooKeeperConnectionException;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
+
+public class newHBase {
+
+	public static Configuration conf = null;
+	static {
+		conf = HBaseConfiguration.create();
+	}
+
+	public static void createTable(String tableName, String[] familys)
+			throws MasterNotRunningException, ZooKeeperConnectionException, IOException {
+		HBaseAdmin admin = new HBaseAdmin(conf);
+		if (admin.tableExists(tableName)) {
+			System.out.println("table already exists!");
+		} else {
+			HTableDescriptor tableDec = new HTableDescriptor(tableName);
+			for (String str : familys) {
+				tableDec.addFamily(new HColumnDescriptor(str));
+			}
+			admin.createTable(tableDec);
+			System.out.println("table create success!");
+		}
+	}
+
+	public static void mian(String[] args) {
+
+		String tablename = "hbasetest";
+		String[] familys = { "f1", "f2" };
+		try {
+			createTable(tablename, familys);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+}
