@@ -1,4 +1,4 @@
-﻿package mainclass;
+package mainclass;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -60,7 +60,16 @@ public class InvertedIndexer {
 		public void initialize(InputSplit arg0, TaskAttemptContext arg1) throws IOException, InterruptedException {
 			lrr.initialize(arg0, arg1);
 			//去掉文件名后缀
-			fileName = ((FileSplit) arg0).getPath().getName().split("\\.")[0];
+			StringBuilder sb = new StringBuilder();
+			String[] str = ((FileSplit) arg0).getPath().getName().split("\\.");
+			for(String s: str){
+				if(s.toLowerCase().compareTo("txt")==0){
+					break;
+				}
+				sb.append(s);
+			}
+			fileName = sb.toString();
+			
 		}
 
 		public void close() throws IOException {
@@ -104,7 +113,7 @@ public class InvertedIndexer {
 			String line = value.toString().toLowerCase();
 			line = line.replaceAll(pattern, " "); // 将0-9, a-z, A-Z的字符替换为空格
 			StringTokenizer itr = new StringTokenizer(line);
-			for (; itr.hasMoreTokens();) {
+			while (itr.hasMoreTokens()) {
 				temp = itr.nextToken();
 			//	if (!stopwords.contains(temp)) {
 					Text word = new Text();

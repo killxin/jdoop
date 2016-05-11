@@ -4,47 +4,45 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.ArrayList;
+import java.util.TreeSet;
 
+//import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.mapreduce.TableOutputFormat;
-import org.apache.hadoop.hbase.mapreduce.TableReducer;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 
 public class InvertedHBase {
-	//public static Map<String,Double> frequent_set = new HashMap<String,Double>();
 	/** 自定义FileInputFormat **/
 	public static class FileNameInputFormat extends FileInputFormat<Text, Text> {
 		@Override
@@ -104,25 +102,36 @@ public class InvertedHBase {
 
 	public static class InvertedIndexMapper extends Mapper<Text, Text, Text, IntWritable> {
 		private Set<String> stopwords;
-		private Path[] localFiles;
+		//private Path[] localFiles;
+		private Path localFiles;
 		private String pattern = "[\\w]"; // 正则表达式，代表0-9, a-z, A-Z,的所有字
-/*
-		public void setup(Context context) throws IOException, InterruptedException {
+
+		public void /*unused_*/setup(Context context) throws IOException, InterruptedException {
 			stopwords = new TreeSet<String>();
-			Configuration conf = context.getConfiguration();
-			localFiles = DistributedCache.getLocalCacheFiles(conf); // 获得停词表
-			for (int i = 0; i < localFiles.length; i++) {
+		    URI[] cacheFile = context.getCacheFiles();
+	        localFiles = new Path(cacheFile[0]);
+
+	        /*
 				String line;
-				BufferedReader br = new BufferedReader(new FileReader(localFiles[i].toString()));
+				BufferedReader br = new BufferedReader(new FileReader(localFiles.toString()));
 				while ((line = br.readLine()) != null) {
 					StringTokenizer itr = new StringTokenizer(line);
 					while (itr.hasMoreTokens()) {
 						stopwords.add(itr.nextToken());
 					}
-				}
-			}
+				}	
+			*/
+			
+	        Scan scan = new Scan();
+	        ResultScanner rs = stop_table.getScanner(scan);
+	        for(Result result : rs){
+	        	byte[] bytes = result.getRow();
+	        //	System.out.println(new String(bytes));
+	        	stopwords.add(new String(bytes));
+	        }
+			System.out.println("setup load stop_words finished!");
 		}
-*/
+		
 		protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
 			// map()函数这里使用自定义的FileNameRecordReader
 			// 得到key: filename文件名; value: line_string每一行的内容
@@ -132,11 +141,14 @@ public class InvertedHBase {
 			StringTokenizer itr = new StringTokenizer(line);
 			while (itr.hasMoreTokens()) {
 				temp = itr.nextToken();
-			//	if (!stopwords.contains(temp)) {
+				if (!stopwords.contains(temp)) {
 					Text word = new Text();
 					word.set(temp + "#" + key);
 					context.write(word, new IntWritable(1));
-			//	}
+				}
+		        else{
+		      //  	System.out.println(temp+" in stop_words");
+		        }
 			}
 		}
 	}
@@ -165,7 +177,7 @@ public class InvertedHBase {
 		}
 	}
 
-	public static class InvertedIndexReducer extends TableReducer<Text, IntWritable, ImmutableBytesWritable> {
+	public static class InvertedIndexReducer extends Reducer<Text, IntWritable, Text, Text> {
 		private Text word1 = new Text();
 		private Text word2 = new Text();
 		String temp = new String();
@@ -183,6 +195,22 @@ public class InvertedHBase {
 			word2.set(temp + ":" + sum);
 			if (!CurrentItem.equals(word1) && !CurrentItem.equals(" ")) {
 				cleanup(context);
+				/*
+				StringBuilder out = new StringBuilder();
+				double count = 0;
+				double docs = 0;
+				for (String p : postingList) {
+					out.append(p);
+					out.append(";");
+					count = count +Double.parseDouble(p.substring(p.indexOf(":") + 1));
+					docs++;
+				}
+				//out.append("<total," + count + ">.");
+				String frequent = String.format("%.2f",count/docs);
+				if (count > 0){
+					context.write(CurrentItem, new Text(frequent+","+out.toString()));
+				}
+				*/
 				postingList = new ArrayList<String>();
 			}
 			CurrentItem = new Text(word1);
@@ -204,71 +232,80 @@ public class InvertedHBase {
 			//out.append("<total," + count + ">.");
 			String frequent = String.format("%.2f",count/docs);
 			//Double frequent_num = count/docs;
-			if (count > 0 && CurrentItem.getLength()!=0){
-				Put put = new Put(CurrentItem.getBytes());
+			if (count > 0 && CurrentItem.getLength() != 0){
+				Put put = new Put(Bytes.toBytes(CurrentItem.toString()));
 				put.addColumn(Bytes.toBytes("family"), Bytes.toBytes("frequent"), Bytes.toBytes(frequent));
-				context.write(new ImmutableBytesWritable(CurrentItem.getBytes()), put);
+				table.put(put);
 				//frequent_set.put(CurrentItem.toString(),frequent_num);
 				//context.write(CurrentItem, new Text(frequent+","+out.toString()));
-				//context.write(CurrentItem, new Text(out.toString()));
+				context.write(CurrentItem, new Text(out.toString()));
 			}
 		}
 
 	}
+
+	public static Table table = null;
+	public static Table stop_table = null;
 	
-	public static void createHBaseTable(String tablename) throws IOException {
-		Configuration conf = HBaseConfiguration.create();
-		Connection connection = ConnectionFactory.createConnection(conf);
+	public static void main(String[] args) throws Exception {
+		/*connect to hbase and create table 'wuxia'*/
+		Configuration confi = HBaseConfiguration.create();
+		Connection connection = ConnectionFactory.createConnection(confi);
 		Admin admin = connection.getAdmin();
-		TableName tableName = TableName.valueOf(tablename);
+		TableName tableName = TableName.valueOf("wuxia");
 		if (admin.tableExists(tableName)) {
 			admin.disableTable(tableName);
 			admin.deleteTable(tableName);
-			System.out.println("table already exists!");
+			System.out.println(tableName + " table already exists!");
 		}
-		System.out.println("table create start!");
+		System.out.println(tableName + " table create start!");
 		HTableDescriptor tableDec = new HTableDescriptor(tableName);
 		tableDec.addFamily(new HColumnDescriptor("family"));
 		admin.createTable(tableDec);
-		System.out.println("table create success!");
-	}
-/*
-	public static void writeHBase(){
-		try {
-			Configuration conf = HBaseConfiguration.create();
-			Connection connection = ConnectionFactory.createConnection(conf);
-			Table table = connection.getTable(TableName.valueOf("wuxia"));
-			for(Entry<String, Double> entry : frequent_set.entrySet()){
-				Put put = new Put(Bytes.toBytes(entry.getKey()));
-				put.addColumn(Bytes.toBytes("family"), Bytes.toBytes("frequent"), Bytes.toBytes(entry.getValue()));
-				table.put(put);
-			}
-			connection.close();
-			//System.out.println("data insert success!");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		System.out.println(tableName + " table create success!");
+		table = connection.getTable(tableName);
+		
+		tableName = TableName.valueOf("stop_words");
+		if (admin.tableExists(tableName)) {
+			admin.disableTable(tableName);
+			admin.deleteTable(tableName);
+			System.out.println(tableName + " table already exists!");
 		}
-	}
-*/	
-	public static void main(String[] args) throws Exception {
+		System.out.println(tableName + " table create start!");
+		tableDec = new HTableDescriptor(tableName);
+		tableDec.addFamily(new HColumnDescriptor("family"));
+		admin.createTable(tableDec);
+		System.out.println(tableName + " table create success!");
+		stop_table = connection.getTable(tableName);
+		String line;
+		BufferedReader br = new BufferedReader(new FileReader("/home/jdoop/bigdata/stop_words.txt"));
+		while ((line = br.readLine()) != null) {
+			StringTokenizer itr = new StringTokenizer(line);
+			while (itr.hasMoreTokens()) {
+				Put put = new Put(Bytes.toBytes(itr.nextToken()));
+				put.addColumn(Bytes.toBytes("family"), Bytes.toBytes("ignorable"), Bytes.toBytes("ignore"));
+				stop_table.put(put);
+			}
+		}
+		System.out.println("load stop_words finished!");
+		
 		Configuration conf = new Configuration();
-		createHBaseTable("wuxia");
-		conf.set(TableOutputFormat.OUTPUT_TABLE, "wuxia");
-//		DistributedCache.addCacheFile(new URI("hdfs://master01:54310/user/2014st08/stop-words.txt"), conf);// 设置停词列表文档作为当前作业的缓存文件
 		Job job = new Job(conf, "inverted index");
+		//向分布式缓存中添加文件
+		//job.addCacheFile(new Path("stop_words.txt").toUri());
+		
 		job.setJarByClass(InvertedHBase.class);
 		job.setInputFormatClass(FileNameInputFormat.class);
-		job.setOutputFormatClass(TableOutputFormat.class);
-		
 		job.setMapperClass(InvertedIndexMapper.class);
 		job.setCombinerClass(SumCombiner.class);
 		job.setReducerClass(InvertedIndexReducer.class);
 		job.setPartitionerClass(NewPartitioner.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(IntWritable.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
 		FileInputFormat.addInputPath(job, new Path(args[0]));
-		//FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 }

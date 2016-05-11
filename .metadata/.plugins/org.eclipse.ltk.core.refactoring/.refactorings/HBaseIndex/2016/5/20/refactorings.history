@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring accessors="true" comment="Delete element from project &apos;HBaseIndex&apos;&#x0A;- Original project: &apos;HBaseIndex&apos;&#x0A;- Original element: &apos;mainclass.InvertedHBase.java&apos;" description="Delete element" element1="/src&lt;mainclass{InvertedHBase.java" elements="1" flags="589830" id="org.eclipse.jdt.ui.delete" resources="0" stamp="1462942291081" subPackages="false" version="1.0"/>
+</session>
