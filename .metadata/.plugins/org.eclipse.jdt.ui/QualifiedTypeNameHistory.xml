@@ -34,4 +34,14 @@
 <fullyQualifiedTypeName name="org.apache.hadoop.hbase.mapreduce.TableReducer"/>
 <fullyQualifiedTypeName name="org.apache.hadoop.hbase.client.Table"/>
 <fullyQualifiedTypeName name="org.apache.hadoop.hbase.io.ImmutableBytesWritable"/>
+<fullyQualifiedTypeName name="java.net.URI"/>
+<fullyQualifiedTypeName name="java.util.TreeSet"/>
+<fullyQualifiedTypeName name="java.io.BufferedReader"/>
+<fullyQualifiedTypeName name="java.io.FileReader"/>
+<fullyQualifiedTypeName name="org.apache.hadoop.fs.FileSystem"/>
+<fullyQualifiedTypeName name="org.apache.hadoop.hbase.client.Get"/>
+<fullyQualifiedTypeName name="org.apache.hadoop.hbase.client.Result"/>
+<fullyQualifiedTypeName name="org.apache.hadoop.hbase.KeyValue"/>
+<fullyQualifiedTypeName name="org.apache.hadoop.hbase.client.Scan"/>
+<fullyQualifiedTypeName name="org.apache.hadoop.hbase.client.ResultScanner"/>
 </qualifiedTypeNameHistroy>

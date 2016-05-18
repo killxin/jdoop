@@ -1,1 +1,1 @@
-[[{"location":"/home/jdoop/hbase-1.1.4/lib/hbase-common-1.1.4.jar","type":"JAR","hints":{}},"org.apache.hbase:hbase-common:1.1.4"],[{"location":"/home/jdoop/hbase-1.1.4/lib/hadoop-common-2.5.1.jar","type":"JAR","hints":{}},"org.apache.hadoop:hadoop-common:2.5.1"]]
+[[{"location":"/home/jdoop/hbase-1.1.4/lib/hadoop-mapreduce-client-core-2.5.1.jar","type":"JAR","hints":{}},"org.apache.hadoop:hadoop-mapreduce-client-core:2.5.1"],[{"location":"/usr/lib/jvm/java-7-oracle","type":"JRE","hints":{"EXECUTION_ENVIRONMENT":"JavaSE-1.7"}},"jre:jre:1.7.0"]]
