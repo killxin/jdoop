@@ -34,10 +34,8 @@ public class TriangleSearch {
 				context.write(new Text(str), zero);
 			}
 			for (int i = 0; i < ends.length - 1; i++) {
-				for (int j = i + 1; j < ends.length; j++) {
-					str = ends[j] + "#" + ends[i];
-					context.write(new Text(str), one);
-				}
+				str = ends[i + 1] + "#" + ends[i];
+				context.write(new Text(str), one);
 			}
 		}
 	}
