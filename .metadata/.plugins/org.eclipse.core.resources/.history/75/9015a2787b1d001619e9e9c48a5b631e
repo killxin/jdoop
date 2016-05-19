@@ -1,0 +1,17 @@
+package triangle;
+
+import org.apache.hadoop.conf.Configuration;
+
+public class Driver {
+	public static Configuration conf = new Configuration();
+	
+	public static void main(String[] args) throws Exception {
+		conf.setInt("triangle", 0);
+		String[] forGB = { args[0], args[1] + "/GraphSchema" };
+		GraphBuilder.main(forGB);
+		String[] forTS = { args[1] + "/GraphSchema", args[1] + "/TriangleNum" };
+		TriangleSearch.main(forTS);
+		String trianglenum = conf.get("triangle");
+		System.out.println(trianglenum);
+	}
+}

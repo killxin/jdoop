@@ -43,6 +43,8 @@ public class TriangleSearch {
 	}
 
 	public static class TriangleSearchReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+		private static Text current_num = new Text("num");
+		
 		public void reduce(Text key, Iterable<IntWritable> values, Context context)
 				throws IOException, InterruptedException {
 			boolean sign = false;
@@ -55,14 +57,19 @@ public class TriangleSearch {
 					sum += val;
 				}
 			}
-			if (sign) {
+			if (sign && sum != 0) {
+				Configuration conf = context.getConfiguration();
+				int num = conf.getInt("triangle",0) + sum;
+				conf.setInt("triangle", num);
 				context.write(key, new IntWritable(sum));
+				context.write(current_num, new IntWritable(num));
 			}
 		}
 	}
 
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
+		conf.setInt("triangle", 0);
 		Job job1 = Job.getInstance(conf, "Triangle Search");
 		job1.setJarByClass(TriangleSearch.class);
 		job1.setOutputKeyClass(Text.class);
