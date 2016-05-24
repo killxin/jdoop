@@ -1,0 +1,11 @@
+package experiment;
+
+public class Split {
+	public static void main() {
+		String str = "1#2#3#";
+		String[] ends = str.split("#");
+		for(String end: ends){
+			System.out.println(end);
+		}
+	}
+}
