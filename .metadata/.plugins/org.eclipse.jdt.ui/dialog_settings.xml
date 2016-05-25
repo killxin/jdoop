@@ -49,6 +49,7 @@
 		<item value="false" key="jarOptionsWizardPage.STORE_USE_SRC_FOLDERS"/>
 		<item value="" key="jarOptionsWizardPage.DESCRIPTION_LOCATION"/>
 		<list key="JarPackageWizardPage.DESTINATION_NAMES_ID">
+			<item value="/home/jdoop/bigdata/trianglecount.jar"/>
 			<item value="/home/jdoop/bigdata/trianglesearch.jar"/>
 			<item value="/home/jdoop/bigdata/graphbuilder.jar"/>
 			<item value="/home/jdoop/bigdata/hbaseindex.jar"/>

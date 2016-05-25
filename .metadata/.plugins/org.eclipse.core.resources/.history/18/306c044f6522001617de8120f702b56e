@@ -1,0 +1,11 @@
+package triangle;
+
+import java.io.BufferedReader;
+
+public class DegreeSort {
+	
+	public static void degreesort(String path){
+		BufferedReader br = new BufferedReader(new FileReader(path));
+	}
+	
+}

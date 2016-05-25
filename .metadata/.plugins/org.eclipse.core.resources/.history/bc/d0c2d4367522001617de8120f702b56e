@@ -1,0 +1,19 @@
+package triangle;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+
+import org.apache.hadoop.fs.Path;
+
+public class Driver {
+
+	public static void main(String[] args) throws Exception {
+		Path dsin = new Path(args[0]), dsout = new Path(args[1]);
+		String[] forDS = { dsin.toString(), dsout.toString() };
+		DegreeSort.main(forDS);
+		String[] forGB = { args[0], args[1] + "/GraphSchema" };
+		GraphBuilder.main(forGB);
+		String[] forTS = { args[1] + "/GraphSchema", args[1] + "/TriangleNum" };
+		TriangleSearch.main(forTS);
+	}
+}

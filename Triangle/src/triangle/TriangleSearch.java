@@ -22,20 +22,32 @@ public class TriangleSearch {
 
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			String[] strs = value.toString().split("\t");
-			if (strs.length != 2) {
-				System.out.println("illegal input");
-				System.out.println(value.toString());
-			}
 			String start = strs[0];
 			String[] ends = strs[1].split("#");
 			String str = null;
 			for (String end : ends) {
-				str = start + "#" + end;
+				str = start.split("@")[1] + "#" + end.split("@")[1];
 				context.write(new Text(str), zero);
 			}
 			for (int i = 0; i < ends.length - 1; i++) {
+				String[] str0 = ends[i].split("@");
+				int d0 = Integer.parseInt(str0[0]);
+				String s0 = str0[1];
 				for (int j = i + 1; j < ends.length; j++) {
-					str = ends[j] + "#" + ends[i];
+					String[] str1 = ends[j].split("@");
+					int d1 = Integer.parseInt(str1[0]);
+					String s1 = str1[1];
+					if (d0 > d1) {
+						str = s1 + "#" + s0;
+					} else if (d0 < d1) {
+						str = s0 + "#" + s1;
+					} else if (s0.compareTo(s1) > 0) {
+						str = s1 + "#" + s0;
+					} else if (s0.compareTo(s1) < 0) {
+						str = s0 + "#" + s1;
+					} else {
+						System.out.println("single circle");
+					}
 					context.write(new Text(str), one);
 				}
 			}
@@ -89,8 +101,6 @@ public class TriangleSearch {
 				Configuration conf = context.getConfiguration();
 				int num = conf.getInt("triangle", 0) + sum;
 				conf.setInt("triangle", num);
-				// context.write(key, new IntWritable(sum));
-				// context.write(current_num, new IntWritable(num));
 			}
 		}
 
