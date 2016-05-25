@@ -70,8 +70,7 @@ public class DegreeSort {
 	}
 
 	public static void main(String[] args) throws IOException {
-		//degreesort("/home/jdoop/bigdata/twitter_data.txt", "/home/jdoop/bigdata/twitter_degree.txt");
-		degreesort("/home/jdoop/bigdata/google_data.txt", "/home/jdoop/bigdata/google_degree.txt");
+		degreesort("/home/jdoop/bigdata/twitter_data.txt", "/home/jdoop/bigdata/twitter_degree.txt");
 		//degreesort(args[0],args[1]);
 	}
 }

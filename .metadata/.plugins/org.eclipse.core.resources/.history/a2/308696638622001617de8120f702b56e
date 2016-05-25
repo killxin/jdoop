@@ -60,9 +60,9 @@ public class GraphBuilder {
 				context.write(new Text(s1), new Text(s0));
 			} else if (d0 < d1) {
 				context.write(new Text(s0), new Text(s1));
-			} else if (strs[0].compareTo(strs[1]) > 0) {
+			} else if (s0.compareTo(s1) > 0) {
 				context.write(new Text(s1), new Text(s0));
-			} else if (strs[0].compareTo(strs[1]) < 0) {
+			} else if (s0.compareTo(s1) < 0) {
 				context.write(new Text(s0), new Text(s1));
 			} else {
 				System.out.println("single circle");
@@ -80,9 +80,7 @@ public class GraphBuilder {
 			List<String> ends = new ArrayList<String>();
 			for (Text val : values) {
 				end = val.toString();
-				if(!ends.contains(end)){
-					ends.add(end);
-				}
+				ends.add(end);
 				str = key.toString().split("@")[1] + "#" + end.split("@")[1];
 				context.write(new Text(str), zero);
 			}
