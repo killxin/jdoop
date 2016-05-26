@@ -18,7 +18,7 @@ import java.net.URI;
 
 public class TPP {
 
-	public static final int PARTS_NUM = 20;
+	public static final int PARTS_NUM = 4;
 	// try different value to get the best performance.
 
 	public static int hashFun(String nodeName) {

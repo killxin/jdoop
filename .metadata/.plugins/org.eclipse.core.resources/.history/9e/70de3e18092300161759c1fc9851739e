@@ -18,7 +18,7 @@ import java.net.URI;
 
 public class TPP {
 
-	public static final int PARTS_NUM = 20;
+	public static final int PARTS_NUM = 4;
 	// try different value to get the best performance.
 
 	public static int hashFun(String nodeName) {
@@ -97,13 +97,14 @@ public class TPP {
 					G.get(u).adjoinings.add(G.get(v));
 				} else
 */				
-				if (u.compareTo(v) > 0) {
+//				if (u.compareTo(v) > 0) {
 					G.get(v).adjoinings.add(G.get(u));
-				} else if (u.compareTo(v) < 0) {
+//				} else if (u.compareTo(v) < 0) {
 					G.get(u).adjoinings.add(G.get(v));
-				} else {
+/*				} else {
 					System.out.println("single circle");
 				}
+				*/
 			}
 			IntPair p = findTriangles(G);
 

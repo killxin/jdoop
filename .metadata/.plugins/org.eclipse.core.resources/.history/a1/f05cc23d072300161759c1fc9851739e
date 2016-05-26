@@ -18,7 +18,7 @@ import java.net.URI;
 
 public class TPP {
 
-	public static final int PARTS_NUM = 20;
+	public static final int PARTS_NUM = 4;
 	// try different value to get the best performance.
 
 	public static int hashFun(String nodeName) {
@@ -77,9 +77,9 @@ public class TPP {
 			br.close();
 		}
 */
-		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+		public void reduce(Text key, Iterable<Text> edges, Context context) throws IOException, InterruptedException {
 			Map<String, GNode> G = new TreeMap<String, GNode>();
-			for (Text e : values) {
+			for (Text e : edges) {
 				String[] strs = e.toString().split("#");
 				assert (strs.length == 2);
 				String u = strs[0];
