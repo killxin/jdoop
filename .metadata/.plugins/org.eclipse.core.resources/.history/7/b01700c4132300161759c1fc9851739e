@@ -18,7 +18,7 @@ import java.io.*;
 
 public class TPP {
 
-	public static final int PARTS_NUM = 1;
+	public static final int PARTS_NUM = 4;
 	// try different value to get the best performance.
 
 	public static int hashFun(String nodeName) {
@@ -34,9 +34,6 @@ public class TPP {
 			String v = strs[1];
 			int hu = hashFun(u);
 			int hv = hashFun(v);
-			if (PARTS_NUM == 1) {
-				context.write(new Text("1%1"), new Text(u + "#" + v));
-			}
 			for (int a = 0; a <= PARTS_NUM - 2; a++) {
 				for (int b = a + 1; b <= PARTS_NUM - 1; b++) {
 					if ((hu == a || hu == b) && (hv == a || hv == b)) {
@@ -60,6 +57,26 @@ public class TPP {
 	}
 
 	public static class TppReducer extends Reducer<Text, Text, Text, IntWritable> {
+/*
+		private static HashMap<String, Integer> nodeDeg = new HashMap<String, Integer>();
+		private static Path localFiles = null;
+
+		public void setup(Context context) throws IOException, InterruptedException {
+			URI[] cacheFile = context.getCacheFiles();
+			localFiles = new Path(cacheFile[0]);
+			String line;
+			BufferedReader br = new BufferedReader(new FileReader(localFiles.toString()));
+			while ((line = br.readLine()) != null) {
+				String[] strs = line.split("#");
+				if (strs.length != 2) {
+					System.err.println(line);
+				} else {
+					nodeDeg.put(strs[0], Integer.parseInt(strs[1]));
+				}
+			}
+			br.close();
+		}
+*/
 		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 			Map<String, Set<String>> G = new TreeMap<String, Set<String>>();
 			for (Text e : values) {
@@ -73,7 +90,14 @@ public class TPP {
 				}
 				if (!G.containsKey(v)) {
 					G.put(v, new TreeSet<String>());
-				}
+				}	
+/*
+				if (compareByDeg(u, v) > 0) {
+					G.get(v).adjoinings.add(G.get(u));
+				} else if (compareByDeg(u, v) < 0) {
+					G.get(u).adjoinings.add(G.get(v));
+				} else
+*/				
 				if (u.compareTo(v) < 0) {
 					G.get(u).add(v);
 				} else if (u.compareTo(v) > 0) {
@@ -83,11 +107,14 @@ public class TPP {
 				}
 			}
 			IntPair p = findTriangles(G);
+
 			Configuration conf = context.getConfiguration();
 			int tempNum = conf.getInt("num", 0) + p.num;
 			conf.setInt("num", tempNum);
 			int tempWeakNum = conf.getInt("weakNum", 0) + p.weakNum;
 			conf.setInt("weakNum", tempWeakNum);
+			int trianglesNum = tempNum;// + tempWeakNum / (PARTS_NUM - 1);
+			context.write(new Text("Triangle Nums:"), new IntWritable(trianglesNum));
 		}
 
 		public void cleanup(Context context) throws IOException, InterruptedException {
@@ -97,16 +124,35 @@ public class TPP {
 			context.write(new Text("Nums:"), new IntWritable(num));
 			context.write(new Text("WeakNums:"), new IntWritable(weakNum));
 			assert (weakNum % (PARTS_NUM - 1) == 0);
-			if (PARTS_NUM == 1) {
-				int trianglesNum = num + weakNum;
-				context.write(new Text("Triangle Nums:"), new IntWritable(trianglesNum));
-
-			} else {
-				int trianglesNum = num + weakNum / (PARTS_NUM - 1);
-				context.write(new Text("Triangle Nums:"), new IntWritable(trianglesNum));
-			}
+			int trianglesNum = num + weakNum / (PARTS_NUM - 1);
+			context.write(new Text("Triangle Nums:"), new IntWritable(trianglesNum));
+		}
+/*
+		public static int compareByDeg(String node_1, String node_2) {
+			int deg_1 = nodeDeg.get(node_1);
+			int deg_2 = nodeDeg.get(node_2);
+			if (deg_1 > deg_2)
+				return 1;
+			else if (deg_1 < deg_2)
+				return -1;
+			else
+				return 0;
 		}
 
+		public static class GNode implements Comparable<GNode> {
+			public int compareTo(GNode b) {
+				return this.nodeName.compareTo(b.nodeName);
+			}
+
+			public GNode(String nodeName) {
+				this.nodeName = nodeName;
+				this.adjoinings = new TreeSet<GNode>();
+			}
+
+			private String nodeName;
+			public Set<GNode> adjoinings;
+		}
+*/
 		public static class IntPair {
 			public int num;
 			public int weakNum;
@@ -119,15 +165,16 @@ public class TPP {
 		}
 
 		public static IntPair findTriangles(Map<String, Set<String>> G) {
-			int hs, ht, hv, num = 0, weakNum = 0;
+			int num = 0;
+			int weakNum = 0;
 			for (Map.Entry<String, Set<String>> entry : G.entrySet()) {
-				hs = hashFun(entry.getKey());
+				int hs = hashFun(entry.getKey());
 				for (String t : entry.getValue()) {
-					ht = hashFun(t);
+					int ht = hashFun(t);
 					Set<String> intersection = new TreeSet<String>(entry.getValue());
 					intersection.retainAll(G.get(t));
 					for (String v : intersection) {
-						hv = hashFun(v);
+						int hv = hashFun(v);
 						if (hs == ht && ht == hv) {
 							weakNum++;
 						} else {
@@ -146,6 +193,7 @@ public class TPP {
 		conf.setInt("num", 0);
 		conf.setInt("weakNum", 0);
 		Job job1 = Job.getInstance(conf, "TPP");
+//		job1.addCacheFile(new Path("degree_sort.txt").toUri());
 		job1.setJarByClass(TPP.class);
 		job1.setOutputKeyClass(Text.class);
 		job1.setOutputValueClass(Text.class);
