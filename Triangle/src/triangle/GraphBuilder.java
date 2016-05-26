@@ -1,6 +1,7 @@
 package triangle;
 
 import java.util.HashMap;
+import java.util.TreeSet;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -57,9 +58,9 @@ public class GraphBuilder {
 				context.write(new Text(s1), new Text(s0));
 			} else if (d0 < d1) {
 				context.write(new Text(s0), new Text(s1));
-			} else if (s0.compareTo(s1) > 0) {
+			} else if (strs[0].compareTo(strs[1]) > 0) {
 				context.write(new Text(s1), new Text(s0));
-			} else if (s0.compareTo(s1) < 0) {
+			} else if (strs[0].compareTo(strs[1]) < 0) {
 				context.write(new Text(s0), new Text(s1));
 			} else {
 				System.out.println("single circle");
@@ -69,8 +70,12 @@ public class GraphBuilder {
 
 	public static class GraphBuilderReducer extends Reducer<Text, Text, Text, Text> {
 		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+			TreeSet<String> neigh = new TreeSet<String>();
+			for(Text value : values){
+				neigh.add(value.toString());
+			}
 			StringBuilder str = new StringBuilder();
-			for (Text val : values) {
+			for (String val : neigh) {
 				str.append(val.toString());
 				str.append("#");
 			}

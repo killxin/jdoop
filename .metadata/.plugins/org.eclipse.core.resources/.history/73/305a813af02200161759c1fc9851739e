@@ -1,0 +1,192 @@
+package tpp;
+
+import java.util.*;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+import java.io.*;
+import java.net.URI;
+
+public class TPP {
+
+	public static final int PARTS_NUM = 4;
+	// try different value to get the best performance.
+
+	public static int hashFun(String nodeName) {
+		return nodeName.hashCode() % PARTS_NUM;
+	}
+
+	public static class TppMapper extends Mapper<LongWritable, Text, Text, Text> {
+
+		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+			String[] strs = value.toString().split(" ");
+			assert (strs.length == 2);
+			String u = strs[0];
+			String v = strs[1];
+			int hu = hashFun(u);
+			int hv = hashFun(v);
+			for (int a = 0; a <= PARTS_NUM - 2; a++) {
+				for (int b = a + 1; b <= PARTS_NUM - 1; b++) {
+					if ((hu == a || hu == b) && (hv == a || hv == b)) {
+						// we use different symbols to mark them.
+						context.write(new Text(a + "%" + b), new Text(u + "#" + v));
+					}
+				}
+			}
+			if (hu != hv) {
+				for (int a = 0; a <= PARTS_NUM - 3; a++) {
+					for (int b = a + 1; b <= PARTS_NUM - 2; b++) {
+						for (int c = b + 1; c <= PARTS_NUM - 1; c++) {
+							if ((hu == a || hu == b || hu == c) && (hv == a || hv == b || hv == c)) {
+								context.write(new Text(a + "%" + b + "%" + c), new Text(u + "#" + v));
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public static class TppReducer extends Reducer<Text, Text, Text, IntWritable> {
+
+
+		private static HashMap<String, Integer> nodeDeg = new HashMap<String, Integer>();
+		private static Path localFiles = null;
+
+		public void setup(Context context) throws IOException, InterruptedException {
+			URI[] cacheFile = context.getCacheFiles();
+			localFiles = new Path(cacheFile[0]);
+			String line;
+			BufferedReader br = new BufferedReader(new FileReader(localFiles.toString()));
+			while ((line = br.readLine()) != null) {
+				String[] strs = line.split("#");
+				if (strs.length != 2) {
+					System.err.println(line);
+				} else {
+					nodeDeg.put(strs[0], Integer.parseInt(strs[1]));
+				}
+			}
+			br.close();
+		}
+
+		public void reduce(Text key, Iterable<Text> edges, Context context) throws IOException, InterruptedException {
+			Map<String, GNode> G = new TreeMap<String, GNode>();
+			for (Text e : edges) {
+				String[] strs = e.toString().split("#");
+				assert (strs.length == 2);
+				String u = strs[0];
+				String v = strs[1];
+				if (!G.containsKey(u)) {
+					G.put(u, new GNode(u));
+				}
+				if (!G.containsKey(v)) {
+					G.put(v, new GNode(v));
+				}
+				if (compareByDeg(u, v) < 0) {
+					G.get(u).adjoinings.add(G.get(v));
+				} else {
+					G.get(v).adjoinings.add(G.get(u));
+				}
+			}
+			IntPair p = findTriangles(G);
+
+			Configuration conf = context.getConfiguration();
+			int tempNum = conf.getInt("num", 0) + p.num;
+			conf.setInt("num", tempNum);
+			int tempWeekNum = conf.getInt("weakNum", 0) + p.weakNum;
+			conf.setInt("weakNum", tempWeekNum);
+
+		}
+
+		public void cleanup(Context context) throws IOException, InterruptedException {
+			Configuration conf = context.getConfiguration();
+			int num = conf.getInt("num", 0);
+			int weakNum = conf.getInt("weakNum", 0);
+			assert (weakNum % (PARTS_NUM - 1) == 0);
+			int trianglesNum = num + weakNum / (PARTS_NUM - 1);
+			context.write(new Text("Triangle Nums:"), new IntWritable(trianglesNum));
+		}
+		public static int compareByDeg(String node_1, String node_2) {
+			int deg_1 = nodeDeg.get(node_1);
+			int deg_2 = nodeDeg.get(node_2);
+			return deg_1 > deg_2 ? 1 : -1;
+		}
+
+		public static class GNode implements Comparable<GNode> {
+			public int compareTo(GNode b) {
+				return this.nodeName.compareTo(b.nodeName);
+			}
+
+			public GNode(String nodeName) {
+				this.nodeName = nodeName;
+				this.adjoinings = new TreeSet<>();
+			}
+
+			private String nodeName;
+			public Set<GNode> adjoinings;
+		}
+
+		public static class IntPair {
+			public int num;
+			public int weakNum;
+
+			// weakNum should divide (PARTS_NUM - 1)
+			public IntPair(int a, int b) {
+				this.num = a;
+				this.weakNum = b;
+			}
+		}
+
+		public static IntPair findTriangles(Map<String, GNode> G) {
+			int num = 0;
+			int weakNum = 0;
+			for (Map.Entry<String, GNode> entry : G.entrySet()) {
+				GNode s = entry.getValue();
+				int hs = hashFun(s.nodeName);
+				for (GNode t : s.adjoinings) {
+					int ht = hashFun(t.nodeName);
+					Set<GNode> intersection = new TreeSet<>(s.adjoinings);
+					intersection.retainAll(t.adjoinings);
+					for (GNode v : intersection) {
+						int hv = hashFun(v.nodeName);
+						if (hs == ht && ht == hv) {
+							weakNum++;
+						} else {
+							num++;
+						}
+					}
+
+				}
+			}
+			return new IntPair(num, weakNum);
+		}
+
+	}
+
+
+	public static void main(String[] args) throws Exception {
+		Configuration conf = new Configuration();
+		conf.setInt("num", 0);
+		conf.setInt("weakNum", 0);
+		Job job1 = Job.getInstance(conf, "TPP");
+		job1.addCacheFile(new Path("degree_sort.txt").toUri());
+		job1.setJarByClass(TPP.class);
+		job1.setOutputKeyClass(Text.class);
+		job1.setOutputValueClass(Text.class);
+		job1.setMapperClass(TppMapper.class);
+		job1.setReducerClass(TppReducer.class);
+		FileInputFormat.addInputPath(job1, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job1, new Path(args[1]));
+		job1.waitForCompletion(true);
+	}
+	
+}
