@@ -107,10 +107,6 @@ public class TPP {
 					G.get(u).add(v);
 				} else if (u.hashCode() > v.hashCode()) {
 					G.get(v).add(u);
-				} else if (u.compareTo(v) < 0){
-					G.get(u).add(v);
-				} else if (u.compareTo(v) > 0){
-					G.get(v).add(u);
 				} else {
 					System.out.println("single circle");
 				}

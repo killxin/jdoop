@@ -111,7 +111,7 @@ public class TPP {
 					G.get(u).add(v);
 				} else if (u.compareTo(v) > 0){
 					G.get(v).add(u);
-				} else {
+				} else
 					System.out.println("single circle");
 				}
 			}

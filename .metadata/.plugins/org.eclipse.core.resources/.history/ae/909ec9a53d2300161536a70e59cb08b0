@@ -18,7 +18,7 @@ import java.io.*;
 
 public class TPP {
 
-	public static final int PARTS_NUM = 20;
+	public static final int PARTS_NUM = 4;
 	// try different value to get the best performance.
 
 	public static int hashFun(String nodeName) {
@@ -106,10 +106,6 @@ public class TPP {
 				if (u.hashCode() < v.hashCode()) {
 					G.get(u).add(v);
 				} else if (u.hashCode() > v.hashCode()) {
-					G.get(v).add(u);
-				} else if (u.compareTo(v) < 0){
-					G.get(u).add(v);
-				} else if (u.compareTo(v) > 0){
 					G.get(v).add(u);
 				} else {
 					System.out.println("single circle");
