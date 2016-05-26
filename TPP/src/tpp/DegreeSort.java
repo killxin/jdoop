@@ -8,6 +8,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import java.net.URI;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+
 public class DegreeSort {
 
 	private static HashMap<String, Integer> nodeDeg = new HashMap<String, Integer>();
@@ -40,6 +47,43 @@ public class DegreeSort {
 		bw.close();
 	}
 
+	public static void degree_to_hdfs(String input, String output) throws IOException{
+		Configuration conf = new Configuration();
+		FileSystem fs = FileSystem.get(URI.create(input), conf);
+		FSDataInputStream hdfsInStream = fs.open(new Path(input));
+		byte[] ioBuffer = new byte[1024];
+		int readLen = hdfsInStream.read(ioBuffer);
+		while (readLen != -1) {
+			System.out.write(ioBuffer, 0, readLen);
+			readLen = hdfsInStream.read(ioBuffer);
+		}
+		hdfsInStream.close();
+		fs.close();
+	}
+	public void WriteFile(String hdfs) throws IOException {
+		Configuration conf = new Configuration();
+		FileSystem fs = FileSystem.get(URI.create(hdfs), conf);
+		FSDataOutputStream hdfsOutStream = fs.create(new Path(hdfs));
+		hdfsOutStream.write(0);
+		hdfsOutStream.close();
+		fs.close();
+	}
+
+	public void ReadFile(String hdfs) throws IOException {
+		Configuration conf = new Configuration();
+		FileSystem fs = FileSystem.get(URI.create(hdfs), conf);
+		FSDataInputStream hdfsInStream = fs.open(new Path(hdfs));
+
+		byte[] ioBuffer = new byte[1024];
+		int readLen = hdfsInStream.read(ioBuffer);
+		while (readLen != -1) {
+			System.out.write(ioBuffer, 0, readLen);
+			readLen = hdfsInStream.read(ioBuffer);
+		}
+		hdfsInStream.close();
+		fs.close();
+	}
+
 	public static void test(String input) throws IOException {
 		BufferedReader br = new BufferedReader(new FileReader(input));
 		String line;
@@ -63,14 +107,16 @@ public class DegreeSort {
 				} else {
 					System.out.println(s0 + "\t" + s1);
 				}
-				while(true);
+				while (true)
+					;
 			}
 		}
 		br.close();
 	}
 
 	public static void main(String[] args) throws IOException {
-		//degreesort("/home/jdoop/bigdata/twitter_data.txt", "/home/jdoop/bigdata/twitter_degree.txt");
-		degreesort(args[0],args[1]);
+		// degreesort("/home/jdoop/bigdata/twitter_data.txt",
+		// "/home/jdoop/bigdata/twitter_degree.txt");
+		degreesort(args[0], args[1]);
 	}
 }

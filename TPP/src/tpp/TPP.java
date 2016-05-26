@@ -61,32 +61,57 @@ public class TPP {
 	}
 
 	public static class TppReducer extends Reducer<Text, Text, Text, IntWritable> {
-		
+
 		private static volatile int num = 0;
 		private static volatile int weakNum = 0;
-		
+/*		
+		private static HashMap<String, Integer> nodeDeg = new HashMap<String, Integer>();
+		private static Path localFiles = null;
+
+		public void setup(Context context) throws IOException, InterruptedException {
+			URI[] cacheFile = context.getCacheFiles();
+			localFiles = new Path(cacheFile[0]);
+			String line;
+			BufferedReader br = new BufferedReader(new FileReader(localFiles.toString()));
+			while ((line = br.readLine()) != null) {
+				String[] strs = line.split("#");
+				if (strs.length != 2) {
+					System.err.println(line);
+				} else {
+					nodeDeg.put(strs[0], Integer.parseInt(strs[1]));
+				}
+			}
+			br.close();
+		}
+*/
 		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 			Map<String, Set<String>> G = new TreeMap<String, Set<String>>();
 			for (Text e : values) {
 				String[] strs = e.toString().split("#");
-				assert (strs.length == 2);
 				String u = strs[0];
 				String v = strs[1];
-
 				if (!G.containsKey(u)) {
 					G.put(u, new TreeSet<String>());
 				}
 				if (!G.containsKey(v)) {
 					G.put(v, new TreeSet<String>());
 				}
-				if (u.compareTo(v) < 0) {
+/*				
+				if (nodeDeg.get(u) < nodeDeg.get(v)) {
 					G.get(u).add(v);
-				} else if (u.compareTo(v) > 0) {
+				} else if (nodeDeg.get(u) > nodeDeg.get(v)) {
+					G.get(v).add(u);
+				} else
+*/ 
+				if (u.hashCode() < v.hashCode()) {
+					G.get(u).add(v);
+				} else if (u.hashCode() > v.hashCode()) {
 					G.get(v).add(u);
 				} else {
 					System.out.println("single circle");
 				}
 			}
+			//triangle count in G
 			int hs, ht, hv;
 			for (Map.Entry<String, Set<String>> entry : G.entrySet()) {
 				hs = hashFun(entry.getKey());
@@ -104,9 +129,8 @@ public class TPP {
 					}
 				}
 			}
-
 		}
-
+		
 		public void cleanup(Context context) throws IOException, InterruptedException {
 			context.write(new Text("Nums:"), new IntWritable(num));
 			context.write(new Text("WeakNums:"), new IntWritable(weakNum));
@@ -118,6 +142,8 @@ public class TPP {
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
 		Job job1 = Job.getInstance(conf, "TPP");
+//		job1.addCacheFile(new Path("gplus_combined.unique.txt.degree").toUri());
+//		job1.addCacheFile(new Path("twitter_graph_v2.txt.degree").toUri());
 		job1.setJarByClass(TPP.class);
 		job1.setOutputKeyClass(Text.class);
 		job1.setOutputValueClass(Text.class);
