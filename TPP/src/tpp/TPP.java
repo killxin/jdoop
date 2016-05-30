@@ -18,7 +18,7 @@ import java.io.*;
 
 public class TPP {
 
-	public static final int PARTS_NUM = 20;
+	public static final int PARTS_NUM = 4;
 	// try different value to get the best performance.
 
 	public static int hashFun(String nodeName) {
@@ -61,9 +61,7 @@ public class TPP {
 	}
 
 	public static class TppReducer extends Reducer<Text, Text, Text, IntWritable> {
-
-		private static volatile int num = 0;
-		private static volatile int weakNum = 0;
+		
 /*		
 		private static HashMap<String, Integer> nodeDeg = new HashMap<String, Integer>();
 		private static Path localFiles = null;
@@ -116,7 +114,7 @@ public class TPP {
 				}
 			}
 			//triangle count in G
-			int hs, ht, hv;
+			int hs, ht, hv, num = 0, weakNum = 0;
 			for (Map.Entry<String, Set<String>> entry : G.entrySet()) {
 				hs = hashFun(entry.getKey());
 				for (String t : entry.getValue()) {
@@ -133,14 +131,11 @@ public class TPP {
 					}
 				}
 			}
-		}
-		
-		public void cleanup(Context context) throws IOException, InterruptedException {
+			int trianglesNum = num + weakNum / (PARTS_NUM - 1);
 			context.write(new Text("Nums:"), new IntWritable(num));
 			context.write(new Text("WeakNums:"), new IntWritable(weakNum));
-			int trianglesNum = num + weakNum / (PARTS_NUM - 1);
 			context.write(new Text("Triangle Nums:"), new IntWritable(trianglesNum));
-		}
+		}	
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -153,6 +148,8 @@ public class TPP {
 		job1.setOutputValueClass(Text.class);
 		job1.setMapperClass(TppMapper.class);
 		job1.setReducerClass(TppReducer.class);
+	    // TPP4 use C4,2+C4,3=10 reducers
+		job1.setNumReduceTasks(10);
 		FileInputFormat.addInputPath(job1, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job1, new Path(args[1]));
 		job1.waitForCompletion(true);
