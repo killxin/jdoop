@@ -10,6 +10,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.Reducer.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
@@ -115,7 +116,7 @@ public class TPP {
 				}
 			}
 			//triangle count in G
-			int hs, ht, hv;
+			int hs, ht, hv, num = 0, weakNum = 0;
 			for (Map.Entry<String, Set<String>> entry : G.entrySet()) {
 				hs = hashFun(entry.getKey());
 				for (String t : entry.getValue()) {
