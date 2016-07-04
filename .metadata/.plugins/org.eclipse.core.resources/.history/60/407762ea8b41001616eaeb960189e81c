@@ -1,0 +1,168 @@
+package mainclass;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.TreeSet;
+
+import org.ansj.domain.Result;
+import org.ansj.domain.Term;
+import org.ansj.library.UserDefineLibrary;
+import org.ansj.splitWord.analysis.DicAnalysis;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class RelationGraph {
+	public static class RelationMapper extends Mapper<Text, Text, Text, Text> {
+
+		private static Path localFiles = null;
+
+		public void setup(Context context) throws IOException, InterruptedException {
+			URI[] cacheFile = context.getCacheFiles();
+			localFiles = new Path(cacheFile[0]);
+			String line;
+			BufferedReader br = new BufferedReader(new FileReader(localFiles.toString()));
+			while ((line = br.readLine()) != null) {
+				UserDefineLibrary.insertWord(line, "nameDic", 1000);
+			}
+			br.close();
+		}
+
+		public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+			Set<String> persons = new HashSet<String>();
+			Result res = DicAnalysis.parse(value.toString());
+			for (Term t : res.getTerms()) {
+				if (t.getNatureStr().compareTo("nameDic") == 0) {
+					persons.add(t.getName());
+				}
+			}
+			List<String> args = new ArrayList<String>(persons);
+			for (int i = 0; i < args.size(); i++) {
+				for (int j = i + 1; j < args.size(); j++) {
+					context.write(new Text(args.get(i)), new Text(args.get(j)+"#1"));
+					context.write(new Text(args.get(j)), new Text(args.get(i)+"#1"));
+				}
+			}
+		}
+	}
+
+	public static class RelationCombiner extends Reducer<Text, Text, Text, Text> {
+		private static Map<String,Integer> map = new HashMap<String,Integer>();
+
+		public void reduce(Text key, Iterable<IntWritable> values, Context context)
+				throws IOException, InterruptedException {
+			int sum = 0;
+			for (IntWritable val : values) {
+				sum += val.get();
+			}
+			result.set(sum);
+			context.write(key, result);
+		}
+	}
+
+	/** 自定义HashPartitioner，保证 <term, docid>格式的key值按照term分发给Reducer **/
+	public static class NewPartitioner extends HashPartitioner<Text, IntWritable> {
+		public int getPartition(Text key, IntWritable value, int numReduceTasks) {
+			String term = new String();
+			term = key.toString().split("#")[0]; // <term#docid>=>term
+			return super.getPartition(new Text(term), value, numReduceTasks);
+		}
+	}
+
+	public static class InvertedIndexReducer extends Reducer<Text, IntWritable, Text, Text> {
+		private Text word1 = new Text();
+		private Text word2 = new Text();
+		String temp = new String();
+		static Text CurrentItem = new Text(" ");
+		static List<String> postingList = new ArrayList<String>();
+
+		public void reduce(Text key, Iterable<IntWritable> values, Context context)
+				throws IOException, InterruptedException {
+			int sum = 0;
+			word1.set(key.toString().split("#")[0]);
+			temp = key.toString().split("#")[1];
+			for (IntWritable val : values) {
+				sum += val.get();
+			}
+			word2.set(temp + ":" + sum);
+			if (!CurrentItem.equals(word1) && !CurrentItem.equals(" ")) {
+				cleanup(context);
+				/*
+				 * StringBuilder out = new StringBuilder(); double count = 0;
+				 * double docs = 0; for (String p : postingList) {
+				 * out.append(p); out.append(";"); count = count
+				 * +Double.parseDouble(p.substring(p.indexOf(":") + 1)); docs++;
+				 * } //out.append("<total," + count + ">."); String frequent =
+				 * String.format("%.2f",count/docs); if (count > 0){
+				 * context.write(CurrentItem, new
+				 * Text(frequent+","+out.toString())); }
+				 */
+				postingList = new ArrayList<String>();
+			}
+			CurrentItem = new Text(word1);
+			postingList.add(word2.toString()); // 不断向postingList也就是文档名称中添加词表
+		}
+
+		// cleanup 一般情况默认为空，有了cleanup不会遗漏最后一个单词的情况
+
+		public void cleanup(Context context) throws IOException, InterruptedException {
+			StringBuilder out = new StringBuilder();
+			double count = 0;
+			double docs = 0;
+			for (String p : postingList) {
+				out.append(p);
+				out.append(";");
+				count = count + Double.parseDouble(p.substring(p.indexOf(":") + 1));
+				docs++;
+			}
+			// out.append("<total," + count + ">.");
+			String frequent = String.format("%.2f", count / docs);
+			// String frequent = String.valueOf(count/docs);
+			if (count > 0) {
+				context.write(CurrentItem, new Text(frequent + "," + out.toString()));
+			}
+		}
+
+	}
+
+	public static void main(String[] args) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "RelationGraph");
+		// 设置renwu文档作为当前作业的缓存文件
+		job.addCacheFile(new URI("hdfs://master01:54310/user/2014st08/stop-words.txt"));
+		job.addCacheFile(new Path("gplus_combined.unique.txt.degree").toUri());
+		job.setJarByClass(RelationGraph.class);
+		job.setMapperClass(InvertedIndexMapper.class);
+		job.setCombinerClass(SumCombiner.class);
+		job.setReducerClass(InvertedIndexReducer.class);
+		job.setPartitionerClass(NewPartitioner.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(IntWritable.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
+		FileInputFormat.addInputPath(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		System.exit(job.waitForCompletion(true) ? 0 : 1);
+	}
+}
