@@ -1,0 +1,42 @@
+package rtg;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.ansj.library.UserDefineLibrary;
+import org.apache.hadoop.io.Text;
+
+class NodePair{
+	public int id;
+	public int label;
+	public double pgr;
+}
+
+public class GraphViewer {
+
+	public static String pgrPath = "";
+
+	public static String lpaPath = "";
+	
+	public static int temp = 0;
+
+	public static void main(String[] args) throws IOException {
+		Map<String, NodePair> nodeMap = new TreeMap<String, NodePair>();
+		String line;
+		BufferedReader br = new BufferedReader(new FileReader(pgrPath));
+		while ((line = br.readLine()) != null) {
+			String[] strs = line.split("\t");
+			String[] keys = strs[0].split("@");
+			int lab = Integer.parseInt(keys[1]);
+			NodePair np = new NodePair();
+			np.id=temp++;
+			np.label = lab;
+			np.pgr = -1;
+			nodeMap.put(keys[0], np);
+		}
+	}
+}
