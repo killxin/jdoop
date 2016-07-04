@@ -1,0 +1,49 @@
+package pagerank;
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class PGInit {
+	
+	private static final double n = 4;
+	
+	public static class PGInitMapper extends Mapper<LongWritable, Text, Text, Text> {
+
+		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+			String[] strs = value.toString().split("\t");
+			context.write(new Text(strs[0] + "@" + 1/n), new Text(strs[1]));
+		}
+	}
+
+	public static class PGInitReducer extends Reducer<Text, Text, Text, Text> {
+
+		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+			for (Text val : values) {
+				context.write(key, val);
+			}
+		}
+	}
+
+	public static void main(String[] args) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "PGInit");
+		job.setJarByClass(PGInit.class);
+		job.setMapperClass(PGInitMapper.class);
+		job.setReducerClass(PGInitReducer.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
+		FileInputFormat.addInputPath(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job,new Path(args[1]) );
+		job.waitForCompletion(true);
+	}
+}
+
