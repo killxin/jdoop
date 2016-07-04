@@ -1,0 +1,105 @@
+package lpa;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
+
+import org.ansj.domain.Result;
+import org.ansj.domain.Term;
+import org.ansj.library.UserDefineLibrary;
+import org.ansj.splitWord.analysis.DicAnalysis;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+
+public class LPAIter {
+	public static class LPAMapper extends Mapper<LongWritable, Text, Text, Text> {
+
+		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+			String[] strs = value.toString().split("\t");
+			String[] keys = strs[0].split("@");
+			double label = Double.parseDouble(keys[1]);
+			String[] neighs = strs[1].split("#");
+			for(String neigh : neighs){
+				String[] vals = neigh.split(",");
+				String lp = String.format("%.2f",label*Double.parseDouble(vals[1]));
+				context.write(new Text(vals[1]), new Text("!"+lp));
+			}
+		}
+
+		public static class RelationCombiner extends Reducer<Text, Text, Text, Text> {
+
+		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+			Map<String, Double> map = new HashMap<String, Double>();
+			for (Text val : values) {
+				String[] res = val.toString().split("#");
+				if (map.containsKey(res[0])) {
+					map.put(res[0], map.get(res[0]) + Double.parseDouble(res[1]));
+				} else {
+					map.put(res[0], Double.parseDouble(res[1]));
+				}
+			}
+			for (Entry<String, Double> entry : map.entrySet()) {
+				context.write(key, new Text(entry.getKey() + "#" + entry.getValue()));
+			}
+		}
+	}
+
+	public static class RelationReducer extends Reducer<Text, Text, Text, Text> {
+
+		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+			Map<String, Double> map = new HashMap<String, Double>();
+			double sum = 0;
+			for (Text val : values) {
+				String[] res = val.toString().split("#");
+				sum += Double.parseDouble(res[1]);
+				if (map.containsKey(res[0])) {
+					map.put(res[0], map.get(res[0]) + Double.parseDouble(res[1]));
+				} else {
+					map.put(res[0], Double.parseDouble(res[1]));
+				}
+			}
+			StringBuilder sb = new StringBuilder();
+			for (Entry<String, Double> entry : map.entrySet()) {
+				String fre = String.format("%.4f", entry.getValue() / sum);
+				sb.append(entry.getKey() + "," + fre + "#");
+			}
+			context.write(key, new Text(sb.toString()));
+		}
+
+	}
+
+	public static void main(String[] args) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "RelationGraph");
+		// 设置renwu文档作为当前作业的缓存文件
+		// job.addCacheFile(new
+		// URI("hdfs://master01:54310/user/2014st08/stop-words.txt"));
+		job.addCacheFile(new Path("nameDictionary").toUri());
+		job.setJarByClass(RelationGraph.class);
+		job.setMapperClass(RelationMapper.class);
+		job.setCombinerClass(RelationCombiner.class);
+		job.setReducerClass(RelationReducer.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
+		// job.setNumReduceTasks(10);
+		FileInputFormat.addInputPath(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		System.exit(job.waitForCompletion(true) ? 0 : 1);
+	}
+}
