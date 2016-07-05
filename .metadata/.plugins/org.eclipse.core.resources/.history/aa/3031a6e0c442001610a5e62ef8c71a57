@@ -40,7 +40,8 @@ public class PGIter {
 			for (Text val : values) {
 				String str = val.toString();
 				if (str.startsWith("!")) {
-					pr += Double.parseDouble(str.substring(1));
+					String[] box = str.substring(1).split("#");
+					pr += Double.parseDouble(box[0]);
 				} else if (str.startsWith("?")) {
 					neigh = str.substring(1);
 				}

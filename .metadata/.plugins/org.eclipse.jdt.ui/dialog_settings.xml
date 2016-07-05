@@ -2,8 +2,8 @@
 <section name="Workbench">
 	<item value="2" key="TypeHierarchyViewPart.hierarchyview"/>
 	<item value="/home/jdoop/bigdata" key="org.eclipse.jdt.ui.lastextjar"/>
-	<item value="3" key="TypeHierarchyViewPart.orientation"/>
 	<item value="false" key="TypeHierarchyViewPart.qualifiednames"/>
+	<item value="3" key="TypeHierarchyViewPart.orientation"/>
 	<item value="false" key="TypeHierarchyViewPart.linkeditors"/>
 	<section name="OptionalMessageDialog.hide.">
 		<item value="true" key="org.eclipse.jdt.ui.typecomment.deprecated"/>
@@ -11,8 +11,8 @@
 	<section name="org.eclipse.jdt.internal.ui.wizards.buildpaths.NewVariableEntryDialog">
 		<item value="653" key="DIALOG_WIDTH"/>
 		<item value="6" key="DIALOG_Y_ORIGIN"/>
-		<item value="80" key="DIALOG_X_ORIGIN"/>
 		<item value="431" key="DIALOG_HEIGHT"/>
+		<item value="80" key="DIALOG_X_ORIGIN"/>
 		<item value="1|Ubuntu|11.0|0|GTK|1|" key="DIALOG_FONT_NAME"/>
 	</section>
 	<section name="JarPackageWizard">
@@ -27,19 +27,19 @@
 		<item value="true" key="jarOptionsWizardPage.EXPORT_ERRORS"/>
 		<item value="true" key="JarPackageWizardPage.EXPORT_CLASS_FILES"/>
 		<item value="false" key="jarOptionsWizardPage.SAVE_DESCRIPTION"/>
-		<item value="false" key="JarManifestWizardPage.SAVE_MANIFEST"/>
 		<item value="false" key="JarPackageWizardPage.EXPORT_JAVA_FILES"/>
+		<item value="false" key="JarManifestWizardPage.SAVE_MANIFEST"/>
 		<item value="false" key="JarPackageWizardPage.EXPORT_OUTPUT_FOLDER"/>
 		<item value="true" key="JarPackageWizardPage.COMPRESS"/>
 		<item value="true" key="jarOptionsWizardPage.BUILD_IF_NEEDED"/>
 		<item value="false" key="jarOptionsWizardPage.STORE_USE_SRC_FOLDERS"/>
 		<item value="" key="jarOptionsWizardPage.DESCRIPTION_LOCATION"/>
 		<list key="JarPackageWizardPage.DESTINATION_NAMES_ID">
+			<item value="/home/jdoop/bigdata/pgr.jar"/>
 			<item value="/home/jdoop/bigdata/lpa.jar"/>
 			<item value="/home/jdoop/bigdata/lpa50Weak.jar"/>
 			<item value="/home/jdoop/bigdata/lpa50.jar"/>
 			<item value="/home/jdoop/bigdata/pgr50.jar"/>
-			<item value="/home/jdoop/bigdata/pgr.jar"/>
 			<item value="/home/jdoop/bigdata/tpp4_with_10_reducers.jar"/>
 			<item value="/home/jdoop/bigdata/trianglesearch_with_degree.jar"/>
 			<item value="/home/jdoop/bigdata/tpp20_without_degree.jar"/>
@@ -97,16 +97,16 @@
 	</section>
 	<section name="JavaElementSearchActions">
 	</section>
-	<section name="NewClassWizardPage">
-		<item value="false" key="create_constructor"/>
-		<item value="true" key="create_unimplemented"/>
-	</section>
 	<section name="org.eclipse.ltk.ui.refactoring.settings">
-		<item value="false" key="updateQualifiedNames"/>
-		<item value="*" key="patterns"/>
 		<item value="false" key="renameSubpackages"/>
+		<item value="*" key="patterns"/>
+		<item value="false" key="updateQualifiedNames"/>
 		<item value="1" key="updateSimilarElementsMatchStrategy"/>
 		<item value="false" key="updateTextualMatches"/>
 		<item value="false" key="updateSimilarElements"/>
+	</section>
+	<section name="NewClassWizardPage">
+		<item value="false" key="create_constructor"/>
+		<item value="true" key="create_unimplemented"/>
 	</section>
 </section>
