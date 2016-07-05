@@ -8,7 +8,6 @@
 <fullyQualifiedTypeName name="org.apache.http.client.ResponseHandler"/>
 <fullyQualifiedTypeName name="org.apache.hadoop.mapreduce.Mapper"/>
 <fullyQualifiedTypeName name="org.apache.hadoop.io.Text"/>
-<fullyQualifiedTypeName name="org.apache.hadoop.mapreduce.lib.input.FileSplit"/>
 <fullyQualifiedTypeName name="java.util.StringTokenizer"/>
 <fullyQualifiedTypeName name="org.apache.hadoop.mapreduce.Reducer"/>
 <fullyQualifiedTypeName name="org.apache.hadoop.mapreduce.lib.partition.HashPartitioner"/>
@@ -57,4 +56,5 @@
 <fullyQualifiedTypeName name="java.io.BufferedWriter"/>
 <fullyQualifiedTypeName name="java.io.FileWriter"/>
 <fullyQualifiedTypeName name="java.io.File"/>
+<fullyQualifiedTypeName name="org.apache.hadoop.mapreduce.lib.input.FileSplit"/>
 </qualifiedTypeNameHistroy>

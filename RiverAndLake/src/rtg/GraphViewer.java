@@ -18,11 +18,11 @@ public class GraphViewer {
 
 	public static String pgrPath = "/home/jdoop/bigdata/RLPGROut/Data30/part-r-00000";
 
-	public static String lpaPath = "/home/jdoop/bigdata/RLLPAOut/Data30/part-r-00000";
+	public static String lpaPath = "/home/jdoop/bigdata/RLLPAOutWeak/Data50/part-r-00000";
 
-	public static String nodeOutPath = "/home/jdoop/bigdata/RLGraphOut/node.csv";
+	public static String nodeOutPath = "/home/jdoop/bigdata/RLGraphOut/node1.csv";
 
-	public static String edgeOutPath = "/home/jdoop/bigdata/RLGraphOut/edge.csv";
+	public static String edgeOutPath = "/home/jdoop/bigdata/RLGraphOut/edge1.csv";
 
 	public static int temp = 0;
 

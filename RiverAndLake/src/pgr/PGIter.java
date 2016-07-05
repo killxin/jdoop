@@ -37,18 +37,16 @@ public class PGIter {
 		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 			String neigh = null;
 			double pr = 0;
-			int n = 0;
 			for (Text val : values) {
 				String str = val.toString();
 				if (str.startsWith("!")) {
-					n++;
 					String[] box = str.substring(1).split("#");
 					pr += Double.parseDouble(box[0]);
 				} else if (str.startsWith("?")) {
 					neigh = str.substring(1);
 				}
 			}
-			pr = (1 - d) / n + d * pr;
+			pr = (1 - d) / PGInit.n + d * pr;
 			context.write(new Text(key.toString() + "@" + pr), new Text(neigh));
 		}
 
