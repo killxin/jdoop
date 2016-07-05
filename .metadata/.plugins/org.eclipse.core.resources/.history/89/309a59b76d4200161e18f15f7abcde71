@@ -14,7 +14,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class PGInit {
 	
-	private static final double n = 1283;//the size of nameDict
+	private static final double n = 1255;//the size of nameDict
 	
 	public static class PGInitMapper extends Mapper<LongWritable, Text, Text, Text> {
 
