@@ -45,13 +45,13 @@ public class LPAIter {
 				if (str.startsWith("!")) {
 					String[] box = str.substring(1).split("#");
 					label = Integer.parseInt(box[0]);
-					// weight = Double.parseDouble(box[1]);
+					weight = Double.parseDouble(box[1]);
 					if (map.containsKey(label)) {
-						// map.put(label, map.get(label) + weight);
-						map.put(label, map.get(label) + 1.0);
+						map.put(label, map.get(label) + weight);
+					//	map.put(label, map.get(label) + 1.0);
 					} else {
-						// map.put(label, weight);
-						map.put(label, 1.0);
+						map.put(label, weight);
+					//	map.put(label, 1.0);
 					}
 				} else if (str.startsWith("?")) {
 					neigh = str.substring(1);
