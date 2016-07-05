@@ -25,8 +25,8 @@ public class PGIter {
 			String[] neighs = strs[1].split("#");
 			for (String neigh : neighs) {
 				String[] vals = neigh.split(",");
-				String lp = String.format("%.2f", pr * Double.parseDouble(vals[1]));
-				context.write(new Text(vals[0]), new Text("!" + lp));
+				Double p = pr * Double.parseDouble(vals[1]);
+				context.write(new Text(vals[0]), new Text("!" + p));
 			}
 			context.write(new Text(keys[0]), new Text("?" + strs[1]));
 		}

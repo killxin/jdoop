@@ -25,10 +25,11 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class RelationGraph {
-	
+
 	public static class RelationMapper extends Mapper<LongWritable, Text, Text, Text> {
 
 		private static Path localFiles = null;
@@ -45,18 +46,22 @@ public class RelationGraph {
 		}
 
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-			Set<String> persons = new HashSet<String>();
-			Result res = DicAnalysis.parse(value.toString());
-			for (Term t : res.getTerms()) {
-				if (t.getNatureStr().compareTo("nameDic") == 0) {
-					persons.add(t.getName());
+			FileSplit fileSplit = (FileSplit) context.getInputSplit();
+			String fileName = fileSplit.getPath().getName();
+			if (fileName.startsWith("金庸")) {
+				Set<String> persons = new HashSet<String>();
+				Result res = DicAnalysis.parse(value.toString());
+				for (Term t : res.getTerms()) {
+					if (t.getNatureStr().compareTo("nameDic") == 0) {
+						persons.add(t.getName());
+					}
 				}
-			}
-			List<String> args = new ArrayList<String>(persons);
-			for (int i = 0; i < args.size(); i++) {
-				for (int j = i + 1; j < args.size(); j++) {
-					context.write(new Text(args.get(i)), new Text(args.get(j) + "#1"));
-					context.write(new Text(args.get(j)), new Text(args.get(i) + "#1"));
+				List<String> args = new ArrayList<String>(persons);
+				for (int i = 0; i < args.size(); i++) {
+					for (int j = i + 1; j < args.size(); j++) {
+						context.write(new Text(args.get(i)), new Text(args.get(j) + "#1"));
+						context.write(new Text(args.get(j)), new Text(args.get(i) + "#1"));
+					}
 				}
 			}
 		}

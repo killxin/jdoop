@@ -1,7 +1,7 @@
 package pgr;
 
 public class PGDriver {
-	private static int times = 5; // 设置迭代次数
+	private static int times = 50; // 设置迭代次数
 
 	public static void main(String[] args) throws Exception {
 		String[] forInit = { "", args[1] + "/Data0" };

@@ -26,7 +26,7 @@ public class LPAIter {
 			String[] neighs = strs[1].split("#");
 			for (String neigh : neighs) {
 				String[] vals = neigh.split(",");
-				String lp = String.format("%d#%.2f", label, Double.parseDouble(vals[1]));
+				String lp = new String(label + "#" + Double.parseDouble(vals[1]));
 				context.write(new Text(vals[0]), new Text("!" + lp));
 			}
 			context.write(new Text(keys[0]), new Text("?" + strs[1]));
@@ -59,6 +59,7 @@ public class LPAIter {
 			weight = 0;
 			for (Entry<Integer, Double> entry : map.entrySet()) {
 				if (entry.getValue() > weight) {
+					weight = entry.getValue();
 					label = entry.getKey();
 				}
 			}
